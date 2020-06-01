@@ -38,7 +38,7 @@ class MQTTBridge(model.NX584Extension):
     if "Siren on" in part.condition_flags:
       self.triggered = True
       self.logger.warning("ALARM TRIGGERED!")
-    elif self.triggered = True:
+    elif self.triggered == True:
       self.triggered = False
       self.logger.warning("ALARM NO LONGER TRIGGERED")
       
