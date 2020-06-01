@@ -70,5 +70,5 @@ class MQTTBridge(model.NX584Extension):
     if self.part is not None:
       system["part"] = self.part
     js = json.dumps(system)
-    self.mqtt.publish('alarm/update', payload=system, qos=0)
+    self.mqtt.publish('alarm/update', payload=js, qos=0)
       
