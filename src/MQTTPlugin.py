@@ -4,6 +4,9 @@ import paho.mqtt.client as mqtt
 
 from nx584 import model
 
+UPDATE_TOPIC = "alarm/update"
+TRIGGER_TOPIC = "alarm/trigger"
+
 LOG = logging.getLogger('pynx584')
 
 
@@ -48,12 +51,12 @@ class MQTTBridge(model.NX584Extension):
       self.triggered = True
       self.logger.warning("ALARM TRIGGERED!")
       js = json.dumps({"triggered": True})
-      self.mqtt.publish('alarm/trigger', payload=js, qos=1)
+      self.mqtt.publish(TRIGGER_TOPIC, payload=js, qos=1)
     elif self.triggered == True:
       self.triggered = False
       self.logger.warning("ALARM NO LONGER TRIGGERED")
       js = json.dumps({"triggered": False})
-      self.mqtt.publish('alarm/trigger', payload=js, qos=0)
+      self.mqtt.publish(TRIGGER_TOPIC, payload=js, qos=0)
     
     part_dict = {
       "number": part.number,
@@ -70,5 +73,5 @@ class MQTTBridge(model.NX584Extension):
     if self.part is not None:
       system["part"] = self.part
     js = json.dumps(system)
-    self.mqtt.publish('alarm/update', payload=js, qos=0)
+    self.mqtt.publish(UPDATE_TOPIC, payload=js, qos=0)
       
