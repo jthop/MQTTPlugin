@@ -14,10 +14,14 @@ class MQTTBridge(model.NX584Extension):
     self.triggered = False
     
     self.mqtt = mqtt.Client()
-    self.mqtt.on_connect = self.on_connect
-    self.mqtt.connect('192.168.29.13', 1883, 60)
+    self._start_mqtt()
 
-  def on_connect(self, client, userdata, flags, rc):
+  def _start_mqtt(self):
+    self.mqtt.on_connect = self._on_connect
+    self.mqtt.connect('192.168.29.13', 1883, 60)
+    self.mqtt.loop_start()
+    
+  def _on_connect(self, client, userdata, flags, rc):
     self.logger.info("MQTT client connected")
     
   def zone_status(self, zone):
