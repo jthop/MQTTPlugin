@@ -13,6 +13,9 @@ class MQTTBridge(model.NX584Extension):
     self.logger.info("MQTTBridge loaded")
     self.triggered = False
     
+    self.zone = None
+    self.part = None
+    
     self.mqtt = mqtt.Client()
     self._start_mqtt()
 
@@ -26,6 +29,7 @@ class MQTTBridge(model.NX584Extension):
     
   def zone_status(self, zone):
     self.logger.info(f"Zone status change for {zone.number}")
+    
     zone_dict = {
       "number": zone.number,
       "name": zone.name,
@@ -34,23 +38,37 @@ class MQTTBridge(model.NX584Extension):
       "type_flags": zone.type_flags,
       "bypassed": zone.bypassed
     }
-    js = json.dumps(zone_dict)
-    self.mqtt.publish('alarm/zone', payload=js, qos=0)    
+    self.zone = zone_dict
+    self._publish()
 
   def partition_status(self, part):
     self.logger.info(f"Partition status change for {part.number}")
+
     if "Siren on" in part.condition_flags:
       self.triggered = True
       self.logger.warning("ALARM TRIGGERED!")
+      js = json.dumps({"triggered": True})
+      self.mqtt.publish('alarm/trigger', payload=js, qos=1)
     elif self.triggered == True:
       self.triggered = False
       self.logger.warning("ALARM NO LONGER TRIGGERED")
-      
+      js = json.dumps({"triggered": False})
+      self.mqtt.publish('alarm/trigger', payload=js, qos=0)
+    
     part_dict = {
       "number": part.number,
       "condition_flags": part.condition_flags,
       "armed": part.armed
     }
-    js = json.dumps(part_dict)
-    self.mqtt.publish('alarm/part', payload=js, qos=0)    
+    self.part = part_dict
+    self._publish()
 
+  def _publish(self):
+    system = {}
+    if self.zone is not None:
+      system["zone"] = self.zone
+    if self.part is not None:
+      system["part"] = self.part
+    js = json.dumps(system)
+    self.mqtt.publish('alarm/update', payload=system, qos=0)
+      
