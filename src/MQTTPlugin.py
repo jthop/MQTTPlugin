@@ -10,7 +10,9 @@ class MQTTBridge(model.NX584Extension):
     self.logger.info("MQTTBridge loaded")
 
   def zone_status(self, zone):
-    self.logger.info('Zone status change for {0}'.format(zone.number))
+    self.logger.info(f"Zone status change for {zone.number}")
+    self.logger.info(f"{zone}")
 
   def partition_status(self, part):
-    self.logger.info('Partition status change for {0}'.format(part.number))
+    self.logger.info(f"Partition status change for {part.number}")
+    self.logger.info(f"{part}")
