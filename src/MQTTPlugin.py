@@ -4,10 +4,10 @@ import paho.mqtt.client as mqtt
 
 from nx584 import model
 
-ZONE_TOPIC = "alarm/zone"
 PART_TOPIC = "alarm/part"
+ZONE_TOPIC = "alarm/zone"
 SYSTEM_TOPIC = "alarm/system"
-EVENT_TOPIC = "alarm/event"
+LOG_TOPIC = "alarm/log"
 TRIGGER_TOPIC = "alarm/trigger"
 QOS = 1
 
@@ -51,7 +51,7 @@ class MQTTBridge(model.NX584Extension):
       "partition_number": event.partition_number
     }
     js = json.dumps(event_dict)
-    self.mqtt.publish(EVENT_TOPIC, payload=js, qos=QOS)
+    self.mqtt.publish(LOG_TOPIC, payload=js, qos=QOS)
     self.logger.info(f"{js}")
     
   def zone_status(self, zone):
