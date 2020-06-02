@@ -31,6 +31,13 @@ class MQTTBridge(model.NX584Extension):
   def _on_connect(self, client, userdata, flags, rc):
     self.logger.info("MQTT client connected")
     
+  def system_status(self, system):
+    self.logger.info(f"System status change for {system.panel_id}")
+    flags = system.status_flags
+  
+  def log_event(event):
+    self.logger.info(f"Event {event.event} {event.event_string}")
+    
   def zone_status(self, zone):
     self.logger.info(f"Zone status change for {zone.number}")
     
