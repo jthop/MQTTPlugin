@@ -48,8 +48,7 @@ class MQTTBridge(model.NX584Extension):
       "event_type": event.event_type,
       "reportable": event.reportable,
       "zone_user_device": event.zone_user_device,
-      "partition_number": event.partition_number,
-      "timestamp": event.timestamp
+      "partition_number": event.partition_number
     }
     js = json.dumps(event_dict)
     self.mqtt.publish(EVENT_TOPIC, payload=js, qos=QOS)
