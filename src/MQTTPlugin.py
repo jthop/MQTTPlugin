@@ -8,7 +8,6 @@ PART_TOPIC = "alarm/part"
 ZONE_TOPIC = "alarm/zone"
 SYSTEM_TOPIC = "alarm/system"
 LOG_TOPIC = "alarm/log"
-TRIGGER_TOPIC = "alarm/trigger"
 QOS = 1
 
 LOG = logging.getLogger('pynx584')
@@ -18,7 +17,6 @@ class MQTTBridge(model.NX584Extension):
   def __init__(self, config=None):
     self.logger = LOG
     self.logger.info("MQTTBridge loaded")
-    self.triggered = False
     
     self.mqtt = mqtt.Client()
     self._start_mqtt()
@@ -30,15 +28,6 @@ class MQTTBridge(model.NX584Extension):
     
   def _on_connect(self, client, userdata, flags, rc):
     self.logger.info("MQTT client connected")
-    
-  def system_status(self, system):
-    sys_dict = {
-      "panel": system.panel_id,
-      "flags": system.status_flags
-    }
-    js = json.dumps(sys_dict)
-    self.mqtt.publish(SYSTEM_TOPIC, payload=js, qos=QOS)
-    self.logger.info(f"{js}")
       
   def log_event(self, event):
     event_dict = {
@@ -52,6 +41,15 @@ class MQTTBridge(model.NX584Extension):
     }
     js = json.dumps(event_dict)
     self.mqtt.publish(LOG_TOPIC, payload=js, qos=QOS)
+    self.logger.info(f"{js}")
+
+  def system_status(self, system):
+    sys_dict = {
+      "panel": system.panel_id,
+      "flags": system.status_flags
+    }
+    js = json.dumps(sys_dict)
+    self.mqtt.publish(SYSTEM_TOPIC, payload=js, qos=QOS)
     self.logger.info(f"{js}")
     
   def zone_status(self, zone):
@@ -67,18 +65,7 @@ class MQTTBridge(model.NX584Extension):
     self.mqtt.publish(ZONE_TOPIC, payload=js, qos=QOS)
     self.logger.info(f"{js}")
 
-  def partition_status(self, part):
-    if "Siren on" in part.condition_flags:
-      self.triggered = True
-      self.logger.warning("ALARM TRIGGERED!")
-      js = json.dumps({"triggered": True})
-      self.mqtt.publish(TRIGGER_TOPIC, payload=js, qos=QOS)
-    elif self.triggered == True:
-      self.triggered = False
-      self.logger.warning("ALARM NO LONGER TRIGGERED")
-      js = json.dumps({"triggered": False})
-      self.mqtt.publish(TRIGGER_TOPIC, payload=js, qos=QOS)
-    
+  def partition_status(self, part):  
     part_dict = {
       "number": part.number,
       "condition_flags": part.condition_flags,
