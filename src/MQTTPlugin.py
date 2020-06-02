@@ -4,7 +4,10 @@ import paho.mqtt.client as mqtt
 
 from nx584 import model
 
-UPDATE_TOPIC = "alarm/update"
+ZONE_TOPIC = "alarm/zone"
+PART_TOPIC = "alarm/part"
+SYSTEM_TOPIC = "alarm/system"
+EVENT_TOPIC = "alarm/event"
 TRIGGER_TOPIC = "alarm/trigger"
 QOS = 1
 
@@ -16,9 +19,6 @@ class MQTTBridge(model.NX584Extension):
     self.logger = LOG
     self.logger.info("MQTTBridge loaded")
     self.triggered = False
-    
-    self.zone = None
-    self.part = None
     
     self.mqtt = mqtt.Client()
     self._start_mqtt()
@@ -32,15 +32,24 @@ class MQTTBridge(model.NX584Extension):
     self.logger.info("MQTT client connected")
     
   def system_status(self, system):
-    self.logger.info(f"System status change for {system.panel_id}")
-    flags = system.status_flags
-  
-  def log_event(event):
-    self.logger.info(f"Event {event.event} {event.event_string}")
+    sys_dict = {
+      "panel": system.panel_id,
+      "flags": system.status_flags
+    }
+    js = json.dumps(sys_dict)
+    self.mqtt.publish(SYSTEM_TOPIC, payload=js, qos=QOS)
+    self.logger.info(f"{js}")
+      
+  def log_event(self, event):
+    event_dict = {
+      "event": event,
+      "str": event.event_string
+    }
+    js = json.dumps(event_dict)
+    self.mqtt.publish(EVENT_TOPIC, payload=js, qos=QOS)
+    self.logger.info(f"{js}")
     
   def zone_status(self, zone):
-    self.logger.info(f"Zone status change for {zone.number}")
-    
     zone_dict = {
       "number": zone.number,
       "name": zone.name,
@@ -49,12 +58,11 @@ class MQTTBridge(model.NX584Extension):
       "type_flags": zone.type_flags,
       "bypassed": zone.bypassed
     }
-    self.zone = zone_dict
-    self._publish()
+    js = json.dumps(zone_dict)
+    self.mqtt.publish(ZONE_TOPIC, payload=js, qos=QOS)
+    self.logger.info(f"{js}")
 
   def partition_status(self, part):
-    self.logger.info(f"Partition status change for {part.number}")
-
     if "Siren on" in part.condition_flags:
       self.triggered = True
       self.logger.warning("ALARM TRIGGERED!")
@@ -71,15 +79,7 @@ class MQTTBridge(model.NX584Extension):
       "condition_flags": part.condition_flags,
       "armed": part.armed
     }
-    self.part = part_dict
-    self._publish()
-
-  def _publish(self):
-    system = {}
-    if self.zone is not None:
-      system["zone"] = self.zone
-    if self.part is not None:
-      system["part"] = self.part
-    js = json.dumps(system)
-    self.mqtt.publish(UPDATE_TOPIC, payload=js, qos=QOS)
-      
+    js = json.dumps(part_dict)
+    self.mqtt.publish(PART_TOPIC, payload=js, qos=QOS)
+    self.logger.info(f"{js}")
+ 
