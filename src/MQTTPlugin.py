@@ -4,6 +4,7 @@ import paho.mqtt.client as mqtt
 
 from nx584 import model
 
+MQTT_HOST = "192.168.29.15"
 PART_TOPIC = "alarm/part"
 ZONE_TOPIC = "alarm/zone"
 SYSTEM_TOPIC = "alarm/system"
@@ -23,7 +24,7 @@ class MQTTBridge(model.NX584Extension):
 
   def _start_mqtt(self):
     self.mqtt.on_connect = self._on_connect
-    self.mqtt.connect('192.168.29.13', 1883, 60)
+    self.mqtt.connect(MQTT_HOST, 1883, 60)
     self.mqtt.loop_start()
     
   def _on_connect(self, client, userdata, flags, rc):
