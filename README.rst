@@ -9,6 +9,6 @@ Install Locally
 
  # git clone https://github.com/jthop/MQTTPlugin.git
  # then cd MQTTPlugin
- # pip install -e .
+ # pip3 install -e .
 
 ::
