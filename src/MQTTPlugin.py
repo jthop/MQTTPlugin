@@ -26,7 +26,7 @@ class MQTTBridge(model.NX584Extension):
   def _start_mqtt(self):
     try:
       self.mqtt.on_connect = self._on_connect
-      self.mqtt.on_disconnect = self.on_disconnect
+      self.mqtt.on_disconnect = self._on_disconnect
       self.mqtt.connect(MQTT_HOST, 1883, 60)
       self.mqtt.loop_start()
     except Exception as e:
@@ -40,7 +40,7 @@ class MQTTBridge(model.NX584Extension):
     self.logger.info("MQTT client connected")
     self.connected = True
   
-  def _on_disconnect(self):
+  def _on_disconnect(self, client, userdata, rc):
     self.connected = False
     self._restart()
     
