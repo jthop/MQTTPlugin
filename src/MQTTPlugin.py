@@ -17,20 +17,38 @@ LOG = logging.getLogger('pynx584')
 class MQTTBridge(model.NX584Extension):
   def __init__(self, config=None):
     self.logger = LOG
+    self.connected = False
     self.logger.info("MQTTBridge loaded")
     
     self.mqtt = mqtt.Client()
     self._start_mqtt()
 
   def _start_mqtt(self):
-    self.mqtt.on_connect = self._on_connect
-    self.mqtt.connect(MQTT_HOST, 1883, 60)
-    self.mqtt.loop_start()
-    
+    try:
+      self.mqtt.on_connect = self._on_connect
+      self.mqtt.on_disconnect = self.on_disconnect
+      self.mqtt.connect(MQTT_HOST, 1883, 60)
+      self.mqtt.loop_start()
+    except Exception as e:
+      self.logger.exception(str(e))
+
+  def _restart(self):
+    self.mqtt.reinitialise()
+    self._start_mqtt()
+      
   def _on_connect(self, client, userdata, flags, rc):
     self.logger.info("MQTT client connected")
-      
+    self.connected = True
+  
+  def _on_disconnect(self):
+    self.connected = False
+    self._restart()
+    
   def log_event(self, event):
+    if not self.connected:
+      self._restart()
+      return
+    
     event_dict = {
       "str": event.event_string,
       "number": event.number,
@@ -45,6 +63,10 @@ class MQTTBridge(model.NX584Extension):
     self.logger.info(f"{js}")
 
   def system_status(self, system):
+    if not self.connected:
+      self._restart()
+      return
+    
     sys_dict = {
       "panel": system.panel_id,
       "flags": system.status_flags
@@ -54,6 +76,10 @@ class MQTTBridge(model.NX584Extension):
     self.logger.info(f"{js}")
     
   def zone_status(self, zone):
+    if not self.connected:
+      self._restart()
+      return
+    
     zone_dict = {
       "number": zone.number,
       "name": zone.name,
@@ -66,7 +92,11 @@ class MQTTBridge(model.NX584Extension):
     self.mqtt.publish(ZONE_TOPIC, payload=js, qos=QOS)
     self.logger.info(f"{js}")
 
-  def partition_status(self, part):  
+  def partition_status(self, part):
+    if not self.connected:
+      self._restart()
+      return
+    
     part_dict = {
       "number": part.number,
       "condition_flags": part.condition_flags,
