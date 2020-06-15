@@ -30,7 +30,8 @@ class MQTTBridge(model.NX584Extension):
       self.mqtt.connect(MQTT_HOST, 1883, 60)
       self.mqtt.loop_start()
     except Exception as e:
-      self.logger.exception(str(e))
+      self.logger.info("mqtt connect failed")
+      self.connected = False
 
   def _restart(self):
     self.mqtt.reinitialise()
